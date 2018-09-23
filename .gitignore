@@ -3,3 +3,6 @@ build
 tags
 .editorconfig
 .DS_Store
+CMakeLists.txt.user
+Ipopt-3.12.7/
+
