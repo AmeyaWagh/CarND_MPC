@@ -101,6 +101,52 @@ int main() {
           double steer_value;
           double throttle_value;
 
+
+
+            double delta = j[1]["steering_angle"];
+            double accel = j[1]["throttle"];
+
+            // transform coordinates to car
+            Eigen::VectorXd ptsx_vehicle = Eigen::VectorXd::Map(ptsx.data(), ptsx.size());
+            Eigen::VectorXd ptsy_vehicle = Eigen::VectorXd::Map(ptsy.data(), ptsy.size());
+
+            for(int i = 0; i < ptsx_vehicle.size(); i++) {
+              double x = ptsx_vehicle[i] - px;
+              double y = ptsy_vehicle[i] - py;
+              ptsx_vehicle[i] = x * cos(psi) + y * sin(psi);
+              ptsy_vehicle[i] = - x * sin(psi) + y * cos(psi);
+            }
+
+            // 3 order polyfit for waypoints
+          auto coefficients = polyfit(ptsx_vehicle, ptsy_vehicle, 3);
+
+          // get Cross Track Error CTE (at x=0)
+          double cte = polyeval(coefficients, 0);
+
+          // Orientation error, -atan(b1 + b2*x, b3* x^2) (as car is at x=0)
+          double epsi = -atan(coefficients[1]);
+
+          // to account for the latency (100ms predict the state of the car after this)
+          double latency = 100.0/1000.0;
+
+          double px_act = v * latency;
+          double py_act = 0;
+          double psi_act = - v * delta * latency / 2.67;
+          double v_act = v + accel * latency;
+          double cte_act = cte + v * sin(epsi) * latency;
+          double epsi_act = epsi + psi_act;
+
+          // state vector
+          Eigen::VectorXd state(6);
+          state << px_act, py_act, psi_act, v_act, cte_act, epsi_act;
+
+          // solve the trajectory
+          auto solution = mpc.Solve(state, coefficients);
+          // get the steering and throttle values
+          steer_value = -solution[0]/ deg2rad(25);
+          throttle_value = solution[1];
+          auto N = solution[2];
+
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
@@ -113,6 +159,10 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
+          for(int i = 0; i < N-1; i++) {
+              mpc_x_vals.push_back(solution[i+3]);
+              mpc_y_vals.push_back(solution[N + i+3]);
+            }
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -123,6 +173,10 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
+          for(int i = 0; i < ptsx_vehicle.size(); i++) {
+              next_x_vals[i] = ptsx_vehicle[i];
+              next_y_vals[i] = ptsy_vehicle[i];
+            }
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
