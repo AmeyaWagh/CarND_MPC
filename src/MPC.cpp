@@ -128,9 +128,9 @@ MPC::~MPC() {}
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   bool ok = true;
 //  size_t i;
-  std::cout << "************ Solving ... **********************" << std::endl;
+
   typedef CPPAD_TESTVECTOR(double) Dvector;
-  std::cout << "************ Dvector typecast ... **********************" << std::endl;
+
 
   // TODO: Set the number of model variables (includes both states and inputs).
   // For example: If the state is a 4 element vector, the actuators is a 2
@@ -146,9 +146,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
 
-  std::cout << "************ creating vars ... **********************" << std::endl;
+
   Dvector vars(n_vars);
-  std::cout << "************ vars created ... **********************" << std::endl;
+
   for (size_t i = 0; i < n_vars; i++) {
     vars[i] = 0;
   }

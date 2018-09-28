@@ -140,16 +140,16 @@ int main() {
           Eigen::VectorXd state(6);
           state << px_act, py_act, psi_act, v_act, cte_act, epsi_act;
 
-          std::cout << "************** Sending trajectories to MPC Solver *****************************\n";
+
           // solve the trajectory
           auto solution = mpc.Solve(state, coefficients);
 
-          std::cout << "************** Obtained solution from solver ***********************************\n";
+
           // get the steering and throttle values
           steer_value = -solution[0]/ deg2rad(25);
           throttle_value = solution[1];
           auto N = solution[2];
-          std::cout << "************** loaded solution ***********************************\n";
+
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -157,13 +157,13 @@ int main() {
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
-          std::cout << "************** displaying MPC trajs ***********************************\n";
+
           //Display the MPC predicted trajectory
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
 
-          std::cout << "************** loaded mpc_x_vals and mpc_y_vals ***********************************\n";
+
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
           for(int i = 0; i < N-1; i++) {
@@ -174,12 +174,12 @@ int main() {
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
-          std::cout << "************** Displaying vals ***********************************\n";
+
           //Display the waypoints/reference line
           vector<double> next_x_vals(ptsx_vehicle.size());
           vector<double> next_y_vals(ptsx_vehicle.size());
 
-          std::cout << "************** loaded next_x_vals and next_y_vals ***********************************\n";
+
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
           for(int i = 0; i < ptsx_vehicle.size(); i++) {
@@ -187,12 +187,12 @@ int main() {
               next_y_vals[i] = ptsy_vehicle[i];
             }
 
-          std::cout << "************** populating json ***********************************\n";
+
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
 
-          std::cout << "************** printing json ***********************************\n";
+
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           // Latency
@@ -204,10 +204,10 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          std::cout << "************** Sending data ***********************************\n";
+
           this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-          std::cout << "************** DONE ***********************************\n";
+
         }
       } else {
         // Manual driving
