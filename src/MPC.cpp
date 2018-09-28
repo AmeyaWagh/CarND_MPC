@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 0;
-double dt = 0;
+size_t N = 15;
+double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -31,8 +31,6 @@ size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N -1;
 
 
-
-
 class FG_eval {
  public:
   // Fitted polynomial coefficients
@@ -45,7 +43,8 @@ class FG_eval {
     // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
     // NOTE: You'll probably go back and forth between this function and
     // the Solver function below.
-     fg[0]=CppAD::pow(0,1);
+//     fg[0]=CppAD::pow(0,1);
+      fg[0]=0;
 //      fg[0]=CppAD::AD::
       ////////////////  Cost Function   //////////////////
     // State: [x,y,psi,v,cte,epsi]
@@ -128,8 +127,10 @@ MPC::~MPC() {}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   bool ok = true;
-  size_t i;
+//  size_t i;
+  std::cout << "************ Solving ... **********************" << std::endl;
   typedef CPPAD_TESTVECTOR(double) Dvector;
+  std::cout << "************ Dvector typecast ... **********************" << std::endl;
 
   // TODO: Set the number of model variables (includes both states and inputs).
   // For example: If the state is a 4 element vector, the actuators is a 2
@@ -137,7 +138,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   //
   // 4 * 10 + 2 * 9
 //  size_t n_vars = 0;
-  size_t n_vars = N * 6 + (N-1) * 2;
+  size_t n_vars = N * 6 + (N - 1) * 2;
   // TODO: Set the number of constraints
 //  size_t n_constraints = 0;
   size_t n_constraints = N * 6;
@@ -145,7 +146,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
 
+  std::cout << "************ creating vars ... **********************" << std::endl;
   Dvector vars(n_vars);
+  std::cout << "************ vars created ... **********************" << std::endl;
   for (size_t i = 0; i < n_vars; i++) {
     vars[i] = 0;
   }

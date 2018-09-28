@@ -3,9 +3,11 @@
 
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
+#include <cppad/cppad.hpp>
+#include <cppad/ipopt/solve.hpp>
 
 using namespace std;
-
+using CppAD::AD;
 
 // Scale factors for Cost
 #define STEERING_CONSTRAINT 0.436332f     // 25 degrees in radians
