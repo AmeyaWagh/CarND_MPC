@@ -101,6 +101,7 @@ MPCController::runControlLoop(json &j)
     epsi = -atan(coefficients[1]);
 
 
+    // compensate for latency
     px_act = v * latency;
     py_act = 0;
     psi_act = - v * delta * latency / 2.67;
