@@ -37,6 +37,10 @@ For finite time horizon `N`, a value of `15` gives good results.
 ## Model Predictive Control with Latency
 To compensate for latency the velocities and positions in the state were calculated with an offset of 100msec
 
+checkout the function in `Utils.cpp` for implementation details
+```cpp
+MPCController::compensateForLatency()
+```
 ---
 
 ## Dependencies

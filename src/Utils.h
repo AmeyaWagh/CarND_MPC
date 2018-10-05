@@ -52,16 +52,32 @@ private:
     double epsi;
     double latency;
 
-    double px_act;
-    double py_act;
-    double psi_act;
-    double v_act;
-    double cte_act;
-    double epsi_act;
+    double px_act;      // latency compensated x velocity
+    double py_act;      // latency compensated y velocity
+    double psi_act;     // latency compensated x velocity
+    double v_act;       // latency compensated car velocity
+    double cte_act;     // latency compensated cross track error
+    double epsi_act;    // latency compensated orientation error
+
+    double N;
 
 public:
     MPCController(MPC mpcInstance);
     json runControlLoop(json &j);
+    void transformToCarCoordinates(Eigen::VectorXd &ptsx_vehicle,
+                                   Eigen::VectorXd &ptsy_vehicle);
+    void compensateForLatency();
+    void getInputs( json &j,
+                    vector<double> &ptsx,
+                    vector<double> &ptsy);
+    void getState(Eigen::VectorXd &state);
+    void getControlInput(vector<double> &solution);
+    void getCTEandEPSI(Eigen::VectorXd &coeffs);
+
+    void setControlOutput(vector<double> &solution,
+                          json &msgJson,
+                          Eigen::VectorXd ptsx_vehicle,
+                          Eigen::VectorXd ptsy_vehicle);
 };
 
 #endif

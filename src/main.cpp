@@ -20,6 +20,7 @@ int main() {
 
     // MPC is initialized here!
     MPC mpc;
+    // MPCController is a high level car controller which uses MPC algorithm
     MPCController car_controller(mpc);
 
     h.onMessage([&car_controller](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -28,7 +29,8 @@ int main() {
         // The 4 signifies a websocket message
         // The 2 signifies a websocket event
         string sdata = string(data).substr(0, length);
-#ifdef debug
+
+#ifdef DEBUG
         cout << sdata << endl;
 #endif
         if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
@@ -39,10 +41,14 @@ int main() {
                 string event = j[0].get<string>();
                 if (event == "telemetry") {
 
+                    //-------------------------------------------------//
+                    // CONTROL LOOP                                    //
+                    //-------------------------------------------------//
                     json msgJson = car_controller.runControlLoop(j);
 
                     auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-#ifdef debug
+
+#ifdef DEBUG
                     std::cout << msg << std::endl;
 #endif
 
@@ -61,6 +67,10 @@ int main() {
     // We don't need this since we're not using HTTP but if it's removed the
     // program
     // doesn't compile :-(
+
+    //-----------------------------------------------------------------------//
+    // because uWS is an abstract class and you need the function definition
+    //-----------------------------------------------------------------------//
     h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data,
                     size_t, size_t) {
         const std::string s = "<h1>Hello world!</h1>";
