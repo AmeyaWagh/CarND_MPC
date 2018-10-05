@@ -9,7 +9,7 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
-## Model
+### Model
 The state space includes
 ```
 x = [   x_position, 
@@ -26,21 +26,32 @@ u = [   steering angle,
         throttle]
 ```
 
+![MPC model](assets/MPC_model.png)
 
-## Timestep Length and Elapsed Duration (N & dt)
+
+### Timestep Length and Elapsed Duration (N & dt)
 MPC requires `dt` for optimization. smaller `dt` gives better resolution thus `dt` is set as 0.1 by manually tuning
 For finite time horizon `N`, a value of `15` gives good results. 
 
-## Polynomial Fitting and MPC Preprocessing
+### Polynomial Fitting and MPC Preprocessing
+from the way points obtained a reference trajectory is generated using polynomial fitting and MPC Solve uses this trajectory to generate N control sequences,
+We only use the first control sequence. 
 
-
-## Model Predictive Control with Latency
+### Model Predictive Control with Latency
 To compensate for latency the velocities and positions in the state were calculated with an offset of 100msec
 
 checkout the function in `Utils.cpp` for implementation details
 ```cpp
 MPCController::compensateForLatency()
 ```
+
+### Code
+`MPCController` is a higher level controller class created by refactoring Udacity's original starter code and uses object of MPC to process control sequences.
+Utils.cpp contains `MPCController` and Utility functions
+
+
+
+
 ---
 
 ## Dependencies

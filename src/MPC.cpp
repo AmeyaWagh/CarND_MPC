@@ -99,7 +99,6 @@ class FG_eval {
         AD<double>  cte0  = vars[cte_start + t - 1];
         AD<double>  epsi0 = vars[epsi_start + t - 1];
 
-        // at t
         AD<double>  delta0  = vars[delta_start + t - 1];
         AD<double>  a0      = vars[a_start + t - 1];
 
