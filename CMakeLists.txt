@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
 set(sources
     src/MPC.cpp
+    src/Utils.cpp
     src/main.cpp)
 
 include_directories(/usr/local/include)
