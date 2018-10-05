@@ -32,6 +32,36 @@ class MPC {
   // Solve the model given an initial state and polynomial coefficients.
   // Return the first actuatotions.
   vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
+  void initVars(CPPAD_TESTVECTOR(double) &vars,
+                Eigen::VectorXd &state,
+                size_t x_start,
+                size_t y_start,
+                size_t psi_start,
+                size_t v_start,
+                size_t cte_start,
+                size_t epsi_start,
+                size_t n_vars
+                );
+
+  void setBoundsForVariables(
+                 CPPAD_TESTVECTOR(double) &vars_lowerbound,
+                 CPPAD_TESTVECTOR(double) &vars_upperbound,
+                 size_t delta_start,
+                 size_t a_start,
+                 size_t &n_vars);
+
+  void setBoundsForConstraints(
+          CPPAD_TESTVECTOR(double) &constraints_lowerbound,
+          CPPAD_TESTVECTOR(double) &constraints_upperbound,
+          Eigen::VectorXd &state,
+          size_t x_start,
+          size_t y_start,
+          size_t psi_start,
+          size_t v_start,
+          size_t cte_start,
+          size_t epsi_start,
+          size_t n_constraints
+          );
 };
 
 #endif /* MPC_H */

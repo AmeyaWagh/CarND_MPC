@@ -43,10 +43,10 @@ class FG_eval {
     // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
     // NOTE: You'll probably go back and forth between this function and
     // the Solver function below.
-//     fg[0]=CppAD::pow(0,1);
+
       fg[0]=0;
-//      fg[0]=CppAD::AD::
-      ////////////////  Cost Function   //////////////////
+
+     ////////////////  Cost Function   //////////////////
     // State: [x,y,psi,v,cte,epsi]
     // Cost based on Reference State; for Trajectory, set cost to 0 (i.e. follow Reference)
     for (size_t t = 0; t < N; t++) {
@@ -127,7 +127,6 @@ MPC::~MPC() {}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   bool ok = true;
-//  size_t i;
 
   typedef CPPAD_TESTVECTOR(double) Dvector;
 
@@ -135,82 +134,38 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // TODO: Set the number of model variables (includes both states and inputs).
   // For example: If the state is a 4 element vector, the actuators is a 2
   // element vector and there are 10 timesteps. The number of variables is:
-  //
-  // 4 * 10 + 2 * 9
-//  size_t n_vars = 0;
+
   size_t n_vars = N * 6 + (N - 1) * 2;
   // TODO: Set the number of constraints
-//  size_t n_constraints = 0;
   size_t n_constraints = N * 6;
 
+
   // Initial value of the independent variables.
-  // SHOULD BE 0 besides initial state.
-
-
   Dvector vars(n_vars);
 
-  for (size_t i = 0; i < n_vars; i++) {
-    vars[i] = 0;
-  }
-
-    vars[x_start]   = state[0];
-    vars[y_start]   = state[1];
-    vars[psi_start] = state[2];
-    vars[v_start]   = state[3];
-    vars[cte_start] = state[4];
-    vars[epsi_start]= state[5];
+  initVars(vars, state,x_start, y_start, psi_start,
+           v_start, cte_start, epsi_start,
+           n_vars);
 
 
+  // Setting lower and upper limits for variables.
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
-  // TODO: Set lower and upper limits for variables.
 
-  // Set non-actuator upper and lower-limits
-  for (size_t i = 0; i < delta_start; i++) {
-      vars_lowerbound[i]  = -1.0e19;
-      vars_upperbound[i]  = 1.0e19;
-  }
-
-  // steering angle constrains
-  for (size_t i = delta_start; i < a_start; i++) {
-      vars_lowerbound[i]  = -STEERING_CONSTRAINT;
-      vars_upperbound[i]  = STEERING_CONSTRAINT;
-  }
-
-
-  // 4d - acceleration constrains: +/- 1.0
-  for (size_t i = a_start; i < n_vars; i++) {
-      vars_lowerbound[i] = -1.0;
-      vars_upperbound[i] = 1.0;
-  }
-
+  setBoundsForVariables(vars_lowerbound,
+                        vars_upperbound,
+                        delta_start, a_start, n_vars);
 
   // Lower and upper limits for the constraints
-  // Should be 0 besides initial state.
   Dvector constraints_lowerbound(n_constraints);
   Dvector constraints_upperbound(n_constraints);
-  for (size_t i = 0; i < n_constraints; i++) {
-    constraints_lowerbound[i] = 0;
-    constraints_upperbound[i] = 0;
-  }
 
-  // lowerbound
-  constraints_lowerbound[x_start]     = state[0];
-  constraints_lowerbound[y_start]     = state[1];
-  constraints_lowerbound[psi_start]   = state[2];
-  constraints_lowerbound[v_start]     = state[3];
-  constraints_lowerbound[cte_start]   = state[4];
-  constraints_lowerbound[epsi_start]  = state[5];
-
-
-  // uppwerbound
-  constraints_upperbound[x_start]     = state[0];
-  constraints_upperbound[y_start]     = state[1];
-  constraints_upperbound[psi_start]   = state[2];
-  constraints_upperbound[v_start]     = state[3];
-  constraints_upperbound[cte_start]   = state[4];
-  constraints_upperbound[epsi_start]  = state[5];
-
+  setBoundsForConstraints(constraints_lowerbound,
+                         constraints_upperbound,
+                         state,
+                         x_start, y_start, psi_start,
+                         v_start, cte_start, epsi_start,
+                         n_constraints);
 
 
   // object that computes objective and constraints
@@ -239,15 +194,19 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   // solve the problem
   CppAD::ipopt::solve<Dvector, FG_eval>(
-      options, vars, vars_lowerbound, vars_upperbound, constraints_lowerbound,
-      constraints_upperbound, fg_eval, solution);
+                options, vars,
+                vars_lowerbound,
+                vars_upperbound,
+                constraints_lowerbound,
+                constraints_upperbound,
+                fg_eval, solution);
 
   // Check some of the solution values
   ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
 
   // Cost
   auto cost = solution.obj_value;
-  std::cout << "Cost " << cost << std::endl;
+  std::cout << "[Cost] " << cost << std::endl;
 
   // TODO: Return the first actuator values. The variables can be accessed with
   // `solution.x[i]`.
@@ -256,12 +215,97 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // creates a 2 element double vector.
   vector<double> result = {solution.x[delta_start], solution.x[a_start], (double)N};
 
-      for(size_t t = 0; t < N; t++) {
-          result.push_back(solution.x[x_start + t+1]);
-      }
+  for(size_t t = 0; t < N; t++) {
+      result.push_back(solution.x[x_start + t+1]);
+  }
 
-      for(size_t t = 0; t < N; t++) {
-          result.push_back(solution.x[y_start + t+1]);
-      }
+  for(size_t t = 0; t < N; t++) {
+      result.push_back(solution.x[y_start + t+1]);
+  }
   return result;
 }
+
+void
+MPC::initVars(CppAD::vector<double> &vars,
+                   Eigen::VectorXd &state,
+                   size_t x_start, size_t y_start,
+                   size_t psi_start, size_t v_start,
+                   size_t cte_start, size_t epsi_start,
+                   size_t n_vars)
+{
+
+      for (size_t i = 0; i < n_vars; i++) {
+        vars[i] = 0;
+      }
+
+      vars[x_start]   = state[0];
+      vars[y_start]   = state[1];
+      vars[psi_start] = state[2];
+      vars[v_start]   = state[3];
+      vars[cte_start] = state[4];
+      vars[epsi_start]= state[5];
+
+}
+
+
+void
+MPC::setBoundsForVariables(CPPAD_TESTVECTOR(double) &vars_lowerbound,
+               CPPAD_TESTVECTOR(double) &vars_upperbound,
+               size_t delta_start,
+               size_t a_start,
+               size_t &n_vars)
+{
+    // Set non-actuator upper and lower-limits
+    for (size_t i = 0; i < delta_start; i++) {
+        vars_lowerbound[i]  = - 1.0e19;
+        vars_upperbound[i]  =   1.0e19;
+    }
+
+    // steering angle constrains
+    for (size_t i = delta_start; i < a_start; i++) {
+        vars_lowerbound[i]  = - STEERING_CONSTRAINT;
+        vars_upperbound[i]  =   STEERING_CONSTRAINT;
+    }
+
+
+    // 4d - acceleration constrains: +/- 1.0
+    for (size_t i = a_start; i < n_vars; i++) {
+        vars_lowerbound[i] = -1.0;
+        vars_upperbound[i] = 1.0;
+    }
+}
+
+
+void
+MPC::setBoundsForConstraints(
+        CppAD::vector<double> &constraints_lowerbound,
+        CppAD::vector<double> &constraints_upperbound,
+        Eigen::VectorXd &state,
+        size_t x_start, size_t y_start, size_t psi_start,
+        size_t v_start, size_t cte_start, size_t epsi_start,
+        size_t n_constraints)
+{
+    for (size_t i = 0; i < n_constraints; i++) {
+      constraints_lowerbound[i] = 0;
+      constraints_upperbound[i] = 0;
+    }
+
+    // lowerbound
+    constraints_lowerbound[x_start]     = state[0];
+    constraints_lowerbound[y_start]     = state[1];
+    constraints_lowerbound[psi_start]   = state[2];
+    constraints_lowerbound[v_start]     = state[3];
+    constraints_lowerbound[cte_start]   = state[4];
+    constraints_lowerbound[epsi_start]  = state[5];
+
+
+    // uppwerbound
+    constraints_upperbound[x_start]     = state[0];
+    constraints_upperbound[y_start]     = state[1];
+    constraints_upperbound[psi_start]   = state[2];
+    constraints_upperbound[v_start]     = state[3];
+    constraints_upperbound[cte_start]   = state[4];
+    constraints_upperbound[epsi_start]  = state[5];
+
+}
+
